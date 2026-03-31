@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 type PostSummary = {
@@ -11,6 +12,7 @@ type PostSummary = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4001";
 
@@ -39,9 +41,14 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d?.user) router.replace("/login");
+      })
+      .catch(() => router.replace("/login"));
     loadPosts().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,10 +103,20 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-5xl w-full mx-auto px-4 py-10">
-        <h1 className="text-3xl font-semibold">Dashboard</h1>
-        <p className="text-zinc-600 mt-2">
-          Add a new post. Markdown is supported in the content field.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold">Dashboard</h1>
+            <p className="text-zinc-600 mt-2">
+              Add a new post. Markdown is supported in the content field.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/accounts"
+            className="rounded-full border bg-white px-5 py-2 text-sm font-medium hover:bg-zinc-50"
+          >
+            Manage accounts
+          </Link>
+        </div>
 
         <form className="mt-8 grid gap-4" onSubmit={onSubmit}>
           <div className="grid gap-1">

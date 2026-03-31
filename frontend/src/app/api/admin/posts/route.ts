@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { z } from "zod";
+import { AUTH_COOKIE_NAME } from "@/lib/authCookie";
 
 const createPostBodySchema = z.object({
   title: z.string().min(1).max(200),
@@ -12,15 +14,10 @@ const createPostBodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.ADMIN_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        {
-          error:
-            "Server is not configured for admin writes. Set ADMIN_API_KEY in environment.",
-        },
-        { status: 503 }
-      );
+    const jar = await cookies();
+    const token = jar.get(AUTH_COOKIE_NAME)?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
     }
 
     const body = await req.json();
@@ -38,7 +35,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(parsed.data),
     });
