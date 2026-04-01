@@ -8,6 +8,15 @@ export const dhfoodsImages = {
   logo: `${BASE}/upload/trang-chu/Dh-Foods-Logo.png`,
   /** Homepage hero slide (kitchen / brand). */
   heroBanner: `${BASE}/upload/trang-chu/${encodeURIComponent("Banner Trang Chủ")}/Banner-Trang-Chu-Bat-Bep.webp`,
+  /** Site background images used across homepage sections. */
+  bgHomeSec2: `${BASE}/assets/img/bg_home_sec_2.jpg`,
+  bgHome3: `${BASE}/assets/img/bg_home_3.jpg`,
+  bgCookingBox: `${BASE}/assets/img/bg_cooking_box.jpg`,
+  /** Homepage small food images. */
+  recipeCanhChua: `${BASE}/upload/page/homepage/Hinh-Nho-Trang-Chu/Hinh-Trang-Chu-Canh-Chua.webp`,
+  recipeKhoThitCa: `${BASE}/upload/page/homepage/Hinh-Nho-Trang-Chu/Hinh-Trang-Chu-Kho-Thit-Ca.webp`,
+  /** Fallback illustration used on homepage. */
+  homeSec5Img: `${BASE}/upload/page/homepage/home_sec_5_img.png`,
 } as const;
 
 /** Thumbnails aligned with the site mega-menu (paths under /products/...). */
@@ -21,4 +30,12 @@ export const productCategoryImages: Record<string, string> = {
   "/products/hop-qua": `${BASE}/upload/Hop-Qua-Gia-Vi/Hop-Go-Ngoai.webp`,
   "/products/trong-luong-lon": `${BASE}/upload/menu/San-Pham-Trong-Luong-Lon.png`,
   "/products/tu-gao": `${BASE}/upload/menu/San-pham-tu-gao.webp`,
+};
+
+export const pageHeroImages: Record<string, string> = {
+  "/about": dhfoodsImages.bgHome3,
+  "/cooperate": dhfoodsImages.bgHomeSec2,
+  "/stores": dhfoodsImages.bgHomeSec2,
+  "/recipes": dhfoodsImages.bgCookingBox,
+  "/login": dhfoodsImages.bgHome3,
 };

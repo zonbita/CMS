@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LogoutButton } from "@/components/auth/LogoutButton";
 import { dhfoodsImages } from "@/lib/dhfoods-images";
 
 const productCategories = [
@@ -88,21 +87,6 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="hidden sm:inline-flex rounded-full bg-zinc-950 text-white px-4 py-2 text-sm font-medium hover:bg-zinc-800"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/login"
-              className="hidden sm:inline-flex rounded-full border bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
-            >
-              Login
-            </Link>
-            <div className="hidden sm:block">
-              <LogoutButton />
-            </div>
             <details className="md:hidden relative">
               <summary className="list-none cursor-pointer rounded-full border px-3 py-2 text-sm">
                 Menu
@@ -128,12 +112,6 @@ export function SiteHeader() {
                 </Link>
                 <Link className="block rounded-xl px-3 py-2 text-sm hover:bg-zinc-50" href="/posts">
                   Bài viết (CMS)
-                </Link>
-                <Link className="block rounded-xl px-3 py-2 text-sm hover:bg-zinc-50" href="/dashboard">
-                  Dashboard
-                </Link>
-                <Link className="block rounded-xl px-3 py-2 text-sm hover:bg-zinc-50" href="/login">
-                  Login
                 </Link>
               </div>
             </details>

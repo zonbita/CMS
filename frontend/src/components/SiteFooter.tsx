@@ -50,13 +50,10 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <div className="font-semibold text-zinc-950">CMS</div>
+          <div className="font-semibold text-zinc-950">Bài viết</div>
           <div className="mt-3 grid gap-2 text-sm">
-            <Link className="text-zinc-600 hover:underline" href="/dashboard">
-              Dashboard
-            </Link>
             <Link className="text-zinc-600 hover:underline" href="/posts">
-              Bài viết
+              Tin tức - Sự kiện
             </Link>
           </div>
         </div>
