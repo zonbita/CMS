@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import { dhfoodsImages, productCategoryImages } from "@/lib/dhfoods-images";
 
 type PostSummary = {
   title: string;
@@ -66,7 +68,18 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="rounded-3xl border bg-white shadow-sm p-6">
+          <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
+            <div className="relative aspect-[16/10] w-full bg-zinc-100">
+              <Image
+                src={dhfoodsImages.heroBanner}
+                alt="Dh Foods — gia vị Việt"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            </div>
+            <div className="p-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-2xl border bg-zinc-50 p-5">
                 <div className="text-3xl font-semibold">1.0M+</div>
@@ -100,6 +113,7 @@ export default async function Home() {
               </Link>
               .
             </div>
+            </div>
           </div>
         </div>
       </section>
@@ -127,19 +141,35 @@ export default async function Home() {
             { t: "GIA VỊ NẤU ƯỚP", d: "Thảo mộc tự nhiên cho món Việt.", href: "/products/gia-vi-nau-uop" },
             { t: "GIA VỊ HOÀN CHỈNH", d: "Pha trộn theo tỷ lệ vàng, tiện lợi.", href: "/products/gia-vi-hoan-chinh" },
             { t: "SA TẾ", d: "Tinh hoa nguyên liệu, cay nồng hoàn hảo.", href: "/products/sa-te" },
-          ].map((c) => (
+          ].map((c) => {
+            const thumb = productCategoryImages[c.href];
+            return (
             <Link
               key={c.href}
               href={c.href}
-              className="rounded-3xl border bg-white p-6 hover:bg-zinc-50 transition"
+              className="rounded-3xl border bg-white overflow-hidden hover:bg-zinc-50 transition group"
             >
+              {thumb ? (
+                <div className="relative aspect-[4/3] bg-zinc-100">
+                  <Image
+                    src={thumb}
+                    alt={c.t}
+                    fill
+                    className="object-contain p-4 transition group-hover:scale-[1.02]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                </div>
+              ) : null}
+              <div className="p-6 pt-4">
               <div className="text-xs font-semibold tracking-wide text-emerald-700">
                 KHÁM PHÁ
               </div>
               <div className="mt-2 text-lg font-semibold">{c.t}</div>
               <div className="mt-2 text-sm text-zinc-600">{c.d}</div>
+              </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </section>
 

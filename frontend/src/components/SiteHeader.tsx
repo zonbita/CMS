@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { dhfoodsImages } from "@/lib/dhfoods-images";
 
 const productCategories = [
   { label: "Muối chấm", href: "/products/muoi-cham" },
@@ -30,8 +32,14 @@ export function SiteHeader() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <div className="h-8 w-8 rounded-xl bg-emerald-600" />
-            <span>Dh Foods</span>
+            <Image
+              src={dhfoodsImages.logo}
+              alt="Dh Foods"
+              width={120}
+              height={36}
+              className="h-9 w-auto object-contain object-left"
+              priority
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">

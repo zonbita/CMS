@@ -11,6 +11,7 @@ const jwt = require("jsonwebtoken");
 
 const Post = require("./models/Post");
 const User = require("./models/User");
+const Product = require("./models/Product");
 
 // Load env from project root regardless of nodemon working directory.
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
@@ -68,6 +69,12 @@ function requireAdmin(req, res, next) {
   return next();
 }
 
+function requireEditor(req, res, next) {
+  const role = req.user?.role;
+  if (role === "admin" || role === "editor") return next();
+  return res.status(403).json({ error: "Editor access required." });
+}
+
 const loginBodySchema = z.object({
   email: z.string().email(),
   password: z.string().min(6).max(200),
@@ -80,6 +87,19 @@ const createPostBodySchema = z.object({
   slug: z.string().min(1).optional(),
   coverImageUrl: z.string().url().optional().or(z.literal("")).default(""),
   tags: z.array(z.string().max(50)).optional().default([]),
+});
+
+const createProductBodySchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).optional(),
+  description: z.string().max(10000).optional().default(""),
+  imageUrl: z.string().url().optional().or(z.literal("")).default(""),
+  category: z.string().max(100).optional().default(""),
+});
+
+const reviewProductBodySchema = z.object({
+  status: z.enum(["approved", "rejected"]),
+  rejectionReason: z.string().max(500).optional().default(""),
 });
 
 function generateSlug(title) {
@@ -158,6 +178,158 @@ app.get("/api/posts/:slug", async (req, res) => {
 
   if (!post) return res.status(404).json({ error: "Post not found." });
   return res.json({ post });
+});
+
+// --- Products (MongoDB) + admin review workflow ---
+
+app.get("/api/products", async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit || "50", 10), 100);
+  const skip = parseInt(req.query.skip || "0", 10);
+
+  const products = await Product.find({ status: "approved" })
+    .sort({ updatedAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .select({
+      name: 1,
+      slug: 1,
+      description: 1,
+      imageUrl: 1,
+      category: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    });
+
+  res.json({ products });
+});
+
+app.get("/api/products/:slug", async (req, res) => {
+  const product = await Product.findOne({
+    slug: req.params.slug,
+    status: "approved",
+  }).select({
+    name: 1,
+    slug: 1,
+    description: 1,
+    imageUrl: 1,
+    category: 1,
+    createdAt: 1,
+    updatedAt: 1,
+  });
+
+  if (!product) return res.status(404).json({ error: "Product not found." });
+  return res.json({ product });
+});
+
+app.post("/api/products", requireAuth, requireEditor, async (req, res) => {
+  const parsed = createProductBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid request body.",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const payload = parsed.data;
+  const slug = payload.slug ? generateSlug(payload.slug) : generateSlug(payload.name);
+
+  try {
+    const existing = await Product.findOne({ slug });
+    if (existing) {
+      return res.status(409).json({ error: "Slug already exists. Choose a different name/slug." });
+    }
+
+    const product = await Product.create({
+      name: payload.name.trim(),
+      slug,
+      description: payload.description || "",
+      imageUrl: payload.imageUrl || "",
+      category: (payload.category || "").trim(),
+      status: "pending",
+      createdBy: req.user.sub,
+    });
+
+    return res.status(201).json({ product });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to create product." });
+  }
+});
+
+app.get("/api/admin/products", requireAuth, requireEditor, async (req, res) => {
+  const statusFilter = req.query.status;
+  const allowed = ["pending", "approved", "rejected", "all"];
+  const status =
+    typeof statusFilter === "string" && allowed.includes(statusFilter) ? statusFilter : "all";
+
+  const query = {};
+  if (req.user.role === "editor") {
+    query.createdBy = req.user.sub;
+  }
+  if (status !== "all") {
+    query.status = status;
+  }
+
+  const products = await Product.find(query)
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .populate("createdBy", "email")
+    .populate("reviewedBy", "email")
+    .lean();
+
+  res.json({
+    products: products.map((p) => ({
+      id: String(p._id),
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      imageUrl: p.imageUrl,
+      category: p.category,
+      status: p.status,
+      rejectionReason: p.rejectionReason || "",
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      reviewedAt: p.reviewedAt,
+      createdByEmail: p.createdBy?.email || null,
+      reviewedByEmail: p.reviewedBy?.email || null,
+    })),
+  });
+});
+
+app.patch("/api/admin/products/:id", requireAuth, requireAdmin, async (req, res) => {
+  const parsed = reviewProductBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid request body.",
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid product id." });
+  }
+
+  const product = await Product.findById(id);
+  if (!product) return res.status(404).json({ error: "Product not found." });
+
+  const { status, rejectionReason } = parsed.data;
+  product.status = status;
+  product.rejectionReason = status === "rejected" ? rejectionReason.trim() : "";
+  product.reviewedAt = new Date();
+  product.reviewedBy = req.user.sub;
+  await product.save();
+
+  return res.json({
+    product: {
+      id: String(product._id),
+      name: product.name,
+      slug: product.slug,
+      status: product.status,
+      rejectionReason: product.rejectionReason,
+      reviewedAt: product.reviewedAt,
+    },
+  });
 });
 
 app.post("/api/posts", requireAuth, requireAdmin, async (req, res) => {

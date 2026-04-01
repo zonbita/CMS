@@ -99,6 +99,12 @@ export default function DashboardPage() {
           >
             Posts
           </Link>
+          <Link
+            href="/dashboard/products"
+            className="text-sm text-zinc-600 hover:underline"
+          >
+            Products (review)
+          </Link>
         </div>
       </header>
 
