@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon cms-app/server.js",
+    "dev:all": "concurrently -k -n backend,frontend -c blue,green \"npm run dev\" \"npm run dev --prefix frontend\"",
     "start": "node cms-app/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,6 +24,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "nodemon": "^3.1.14"
   }
 }
